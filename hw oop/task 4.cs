@@ -3,41 +3,6 @@ using System.Collections.Generic;
 
 namespace Decorator.Examples
 {
-    class MainApp
-    {
-        static void Main()
-        {
-            // Create ConcreteComponent and two Decorators
-            ChristmasBulb bluebulb = new ChristmasBulb(Colour.Purple);
-            ChristmasBulb redbulb = new ChristmasBulb(Colour.Red);
-            ChristmasBulb greenbulb = new ChristmasBulb(Colour.Green);
-            ChristmasBulb whitebulb = new ChristmasBulb(Colour.White);
-            ChristmasGarland merrygarland = new ChristmasGarland(Colour.Yellow);
-            Fir Tree = new Fir();
-            ChristmasFir ChristmasTree = new ChristmasFir(Tree);
-
-            // Link decorators
-            Console.WriteLine("No components: ");
-            ChristmasTree.ShowOff();
-            
-            Console.WriteLine();
-            Console.WriteLine("Some components: ");
-            ChristmasTree.SetBulb(greenbulb);
-            ChristmasTree.SetBulb(bluebulb);
-            ChristmasTree.ShowOff();
-
-            Console.WriteLine();
-            Console.WriteLine("All components: ");
-            ChristmasTree.SetBulb(redbulb);
-            ChristmasTree.SetBulb(whitebulb);
-            ChristmasTree.WrapGarland(merrygarland);
-            ChristmasTree.InstallStar();
-            ChristmasTree.ShowOff();
-
-            // Wait for user
-            Console.Read();
-        }
-    }
     enum Colour
     {
         Red,
@@ -47,14 +12,52 @@ namespace Decorator.Examples
         Yellow,
         Purple
     }
-    // "Component"
+
+
+    class MainApp
+    {
+        static void Main()
+        {
+            // Create ConcreteToys and two Decorators
+            ChristmasBulb bluebulb = new ChristmasBulb(Colour.Purple);
+            ChristmasBulb redbulb = new ChristmasBulb(Colour.Red);
+            ChristmasBulb greenbulb = new ChristmasBulb(Colour.Green);
+            ChristmasBulb whitebulb = new ChristmasBulb(Colour.White);
+            ChristmasGarland merrygarland = new ChristmasGarland(Colour.Yellow);
+            Fir Tree = new Fir();
+            GarlandFir GarlandTree = new GarlandFir(Tree);
+            StarFir StarTree = new StarFir(Tree);
+
+            // Link decorators
+            Console.WriteLine("No components: ");
+            GarlandTree.ShowOff();
+
+            Console.WriteLine();
+            Console.WriteLine("Garland tree components: ");
+            GarlandTree.SetBulb(greenbulb);
+            GarlandTree.SetBulb(bluebulb);
+            GarlandTree.WrapGarland(merrygarland);
+            GarlandTree.ShowOff();
+
+            Console.WriteLine();
+            Console.WriteLine("Star tree components: ");
+            StarTree.SetBulb(redbulb);
+            StarTree.SetBulb(whitebulb);
+            StarTree.InstallStar();
+            StarTree.ShowOff();
+
+            // Wait for user
+            Console.Read();
+        }
+    }
+    // "Toys"
     abstract class TreeToy
     {
         public Colour MyColour { get; protected set; }
         public abstract void ShowOff();
     }
 
-    // "ConcreteComponent"
+    // "ConcreteToys"
     class ChristmasBulb : TreeToy
     {
         public override void ShowOff()
@@ -63,7 +66,7 @@ namespace Decorator.Examples
         }
         public ChristmasBulb(Colour colour) { MyColour = colour; }
     }
-    // Concrete component 2
+    // Concrete Toy 2
     class ChristmasGarland : TreeToy
     {
         public bool lightened;
@@ -86,19 +89,22 @@ namespace Decorator.Examples
         }
         public ChristmasGarland(Colour colour) { MyColour = colour; lightened = false; }
     }
-    // "Decorator"
+    // "Component"
     class Fir
     {
-        public void ShowOff()
+        public virtual bool ShowOff()
         {
             Console.WriteLine("Me is Fir, and I am wonderful!");
+            return true;
         }
     }
-    abstract class Decorator
+
+    //abstract decorator
+    abstract class Decorator : Fir
     {
-        public Fir Tree;
+        protected Fir Tree;
         protected List<ChristmasBulb> Bulbs;
-        public ChristmasGarland Garland;
+
         public Decorator(Fir Sosna)
         {
             Tree = Sosna;
@@ -114,36 +120,27 @@ namespace Decorator.Examples
                 Bulbs.Add(component);
             }
         }
-        public void WrapGarland(ChristmasGarland garland)
-        {
-            Garland = garland;
-        }
-        public virtual bool ShowOff()
+        public override bool ShowOff()
         {
             if (Bulbs == null)
             {
                 Console.WriteLine("No christmas tree can be showed off without bulbs, first install any");
                 return false;
             }
-            Tree.ShowOff();
+            base.ShowOff();
             foreach (ChristmasBulb b in Bulbs)
             {
                 b.ShowOff();
-            }
-            if (Garland != null)
-            {
-                if (!Garland.lightened) { Garland.SwitchLight(); }
-                Garland.ShowOff();
             }
             return true;
         }
     }
 
     // "ConcreteDecoratorA"
-    class ChristmasFir : Decorator
+    class StarFir : Decorator
     {
         protected bool StarInstalled;
-        public ChristmasFir(Fir tree) : base(tree)
+        public StarFir(Fir tree) : base(tree)
         {
         }
         public override bool ShowOff()
@@ -164,5 +161,36 @@ namespace Decorator.Examples
             return true;
         }
         public void InstallStar() { StarInstalled = true; }
+    }
+
+    //Concrete decorator B
+    class GarlandFir : Decorator
+    {
+        public ChristmasGarland? Garland { get; private set; }
+        public GarlandFir(Fir tree) : base(tree)
+        {
+        }
+        public override bool ShowOff()
+        {
+            Console.WriteLine("Our tree components: ");
+            if (!base.ShowOff())
+            {
+                return false;
+            }
+            if (Garland == null)
+            {
+                Console.WriteLine("No garland wrapped");
+                return false;
+            }
+            else
+            {
+                Garland.ShowOff();
+            }
+            return true;
+        }
+        public void WrapGarland(ChristmasGarland garland)
+        {
+            Garland = garland;
+        }
     }
 }
